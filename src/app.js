@@ -1,46 +1,57 @@
-const http = require('http');
-const url = require('url');
-const fs = require('fs');
-const getUsers = require('./modules/users');
+const express = require('express');
+const dotenv = require('dotenv')
+const bodyParser = require('body-parser')
+const cors = require('cors')
+const mongoose = require('mongoose')
+const userRouter = require('./routes/users')
+const bookRouter = require("./routes/books");
+const loggerOne = require('./middlewares/loggerOne')
 
-const hostname = '127.0.0.1';
-const port = 3000;
 
-const server = http.createServer((request, response) => {
-    const parsedUrl = url.parse(request.url, true);
-    const queryObject = parsedUrl.query;
+dotenv.config()
 
-    if (parsedUrl.pathname === '/users') {
-        fs.readFile('data/users.json', (err, data) => {
-            if (err) {
-                response.writeHead(200, { 'Content-Type': 'text/plain' });
-                response.end(getUsers());
-            } else {
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(data);
-            }
-        });
-    } else if ('hello' in queryObject) {
-        const name = queryObject['hello'];
-        if (name) {
-            response.writeHead(200, { 'Content-Type': 'text/plain' });
-            response.end(`Hello, ${name}.`);
-        } else {
-            response.writeHead(400, { 'Content-Type': 'text/plain' });
-            response.end('Bad Request: Enter a name');
-        } 
-    } else if (Object.keys(queryObject).length > 0) {
-        response.writeHead(500, { 'Content-Type': 'text/plain' });
-        response.end('Internal Server Error');
-    } else if (parsedUrl.pathname === '/') {
-        response.writeHead(200, { 'Content-Type': 'text/plain' });
-        response.end('Hello, World!');
-    } else {
-        response.writeHead(500, { 'Content-Type': 'text/plain' });
-        response.end('Not Found');
-    }
-});
+const {
+    PORT = 3000, 
+    API_URL = "http://127.0.0.1",
+    MONGO_URL = "mongodb://127.0.0.1:27017/test"
+} = process.env;
 
-server.listen(port, hostname, () => {
-    console.log(`Сервер запущен по адресу http://${hostname}:${port}/`);
-});
+
+mongoose
+  .connect(MONGO_URL)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Failed to connect to MongoDB", err));
+const app = express();
+
+const helloWorld = (request, response) => {
+    response.status(200),
+    response.send('Hello, World!')
+}
+
+app.use(cors())
+app.use(loggerOne)
+app.use(bodyParser.json())
+app.get('/', helloWorld)
+
+app.post('/', (request, response) => {
+    response.status(200),
+    response.send('Hello, from POST!')
+})
+
+app.use(userRouter)
+app.use(bookRouter);
+
+app.use(function (req, res, next) {
+    res.status(404).send("Not Found");
+  });
+  
+  app.use(function (err, req, res, next) {
+    console.error(err.stack);
+    res.status(500).send("Internal Server Error");
+  });
+  
+
+app.listen(PORT, () => {
+    console.log(`Сервер запущен по адресу ${API_URL}:${PORT}`);
+})
+
