@@ -1,23 +1,23 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const bookSchema = new mongoose.Schema(
-    {
-        name: {
-          type: String,
-          required: true,
-          minLength: 2,
-        },
-        author: {
-          type: String,
-          required: true,
-          minLength: 2,
-        },
-        year: {
-          type: String,
-          required: true,
-          minLength: 2,
-        },
-      }
-)
+const bookSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    minlength: 2,
+  },
+  author: {
+    type: String,
+    required: true,
+    minlength:2,
+  //  enum: ['cat', 'dog', 'bird', 'other'],
+  //  default: 'other',
+  },
+  year: {
+    type: Number,
+    required: true,
+    minlength:4,
+  },
+});
 
-module.exports = mongoose.model("book", bookSchema)
+module.exports = mongoose.model('book', bookSchema);

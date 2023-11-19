@@ -1,20 +1,10 @@
-const router = require('express').Router()
-const loggerTwo = require('../middlewares/loggerTwo')
+const router = require("express").Router();
+const {getUsers,getUser,createUsers,updateUser,deleteUser} = require("../controlers/users")
 
-const {
-  getUsers,
-  getUser,
-  createUser,
-  updateUser,
-  deleteUser,
-} = require('../controllers/users')
+router.get("/users", getUsers);
+router.get("/users/:user_id", getUser);
+router.post("/users", createUsers);
+router.patch("/users/:user_id", updateUser);
+router.delete("/users/:user_id", deleteUser);
 
-router.use(loggerTwo)
-
-router.get('/users', getUsers)
-router.get('/users/:user_id', getUser)
-router.post('/users', createUser)
-router.patch('/users/:user_id', updateUser)
-router.delete('/users/:user_id', deleteUser)
-
-module.exports = router
+module.exports = router;
