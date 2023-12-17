@@ -1,35 +1,76 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const mongoose = require('mongoose');
+const http = require('http');
+const getUsers = require("./modules/allUsers");
+const getBooks = require("./modules/allBooks");
+const addBookToFav = require("./modules/addBookToFav");
 
-const userRoute = require('./routes/users');
-const bookRoute = require('./routes/books')
-const logOne = require('./middleware/loggerOne');
+const hostName = "http://127.0.0.1";
+const port = process.env.PORT || 3003;
 
-dotenv.config();
+const server = http.createServer((request, response) => {
+  const url = new URL(request.url, hostName);
+  const userName = url.searchParams.get("name");
+  const bookId = url.searchParams.get("id");
 
+  if (userName) {
+    response.statusCode = 200;
+    response.statusMessage = "OK";
+    response.setHeader("Content-Type", "text/plain");
+    response.write(`Hello ${userName}`);
+    response.end();
+    return;
+  }
+  if (bookId) {
+    response.statusCode = 200;
+    response.statusMessage = "OK";
+    response.setHeader("Content-Type", "application/json");
+    response.end(addBookToFav(bookId));
+    return;
+  }
 
-const { PORT, API_URL, MYBD } = process.env;
+  switch (request.url) {
+    case "/?users":
+      response.statusCode = 200;
+      response.statusMessage = "OK";
+      response.setHeader("Content-Type", "application/json");
+      response.write(getUsers());
+      response.end();
+      break;
 
-mongoose
-  .connect(MYBD)
-  .catch((error) => console.log(error));
+    case "/?books":
+      response.statusCode = 200;
+      response.statusMessage = "OK";
+      response.setHeader("Content-Type", "application/json");
+      response.write(getBooks());
+      response.end();
+      break;
 
-const app = express();
+    case "/?name":
+      response.statusCode = 400;
+      response.statusMessage = "Bad Request";
+      response.setHeader("Content-Type", "text/plain");
+      response.write(`Enter a name`);
+      response.end();
+      break;
 
-const HelloWorld = (request, response) => {
-  response.status(200);
-  response.send('Hello, World!');
-};
+    case "/":
+      response.statusCode = 200;
+      response.statusMessage = "OK";
+      response.setHeader("Content-Type", "text/plain");
+      response.write(`Hello world`);
+      response.end();
+      break;
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(logOne);
-app.use(userRoute);
-app.use(bookRoute);
-
-app.listen(PORT, () => {
-  console.log(`Ссылка на сервер: ${API_URL}:${PORT}`);
+    default:
+      response.statusCode = 500;
+      response.statusMessage = "Internal Server Error";
+      response.setHeader("Content-Type", "text/plain");
+      response.write("wrong");
+      response.end();
+      break;
+  }
 });
+
+
+server.listen(port, () => {
+    console.log(`сервер запущен по адресу ${hostName}:${port}`);
+} )
